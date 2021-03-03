@@ -1,4 +1,4 @@
-#include "stivale2.h"
+#include <stivale2.h>
 #include <cpu/serial.h>
 #include <cpu/sse.h>
 #include <types.h>

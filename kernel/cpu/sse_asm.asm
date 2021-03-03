@@ -44,3 +44,27 @@ avx_init:
     pop rcx
     pop rax
     ret
+
+global asm_sse_save
+asm_sse_save:
+    mov rax, rdi
+    fxsave [rax]
+    ret
+global asm_sse_load
+asm_sse_load:
+    mov rax, rdi
+    fxrstor [rax]
+    ret
+
+global asm_avx_save
+asm_avx_save:
+    mov eax, 0xffffffff
+    mov edx, 0xffffffff
+    xsave64 [rdi]
+    ret
+global asm_avx_load
+asm_avx_load:
+    mov eax, 0xffffffff
+    mov edx, 0xffffffff
+    xrstor64 [rdi]
+    ret

@@ -97,6 +97,9 @@ $(KERNEL_HDD): $(KERNEL_ELF)
 	echfs-utils -g -p0 $(KERNEL_HDD) import $(KERNEL_ELF) max_os.elf
 	limine-install $(KERNEL_HDD)
 
+.PHONY:all
+all: build
+
 .PHONY:run
 run: $(KERNEL_HDD)
 	qemu-system-x86_64 -m 4G -s -device pvpanic -smp 6 -serial stdio -enable-kvm -d cpu_reset -d guest_errors -hda $(KERNEL_HDD) \
