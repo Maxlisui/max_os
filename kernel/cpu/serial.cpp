@@ -1,5 +1,5 @@
-#include "serial.h"
-#include "cpu.h"
+#include <cpu/cpu.h>
+#include <cpu/serial.h>
 #include <stdarg.h>
 
 static const char CONVERSION_TABLE[] = "0123456789abcdef";

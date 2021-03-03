@@ -1,5 +1,6 @@
 #include "stivale2.h"
 #include <cpu/serial.h>
+#include <cpu/sse.h>
 #include <types.h>
 // #include <stddef.h>
 // #include <stdint.h>
@@ -76,11 +77,24 @@ void* stivale2_get_tag(struct stivale2_struct* stivale2_struct, uint64_t id)
 // The following will be our kernel's entry point.
 extern "C" [[noreturn]] void _start(struct stivale2_struct* stivale2_struct)
 {
-    // Let's get the framebuffer tag.
+    asm volatile("and rsp, -16");
+    asm volatile("cli");
+    // fs is used for getting cpu n°
+    asm volatile("mov ax, 0");
+    asm volatile("mov fs, ax");
+
+    Serial::init_serial_out(0x3F8);
+    Serial::serial_printf("Max OS!\n");
+
+    SSE::init_sse();
+    Serial::serial_printf("Result:");
+    Serial::serial_printf("has SSE   .... yes (probably)");
+    Serial::serial_printf("has XSAVE .... %s", SSE::has_xsave() ? "yes" : "no");
+    Serial::serial_printf("has AVX   .... %s", SSE::has_avx() ? "yes" : "no");
+
     struct stivale2_struct_tag_framebuffer* fb_hdr_tag;
     fb_hdr_tag = (struct stivale2_struct_tag_framebuffer*)stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_FRAMEBUFFER_ID);
 
-    // Check if the tag was actually found.
     if (fb_hdr_tag == NULL) {
         // It wasn't found, just hang...
         for (;;) {
@@ -88,17 +102,11 @@ extern "C" [[noreturn]] void _start(struct stivale2_struct* stivale2_struct)
         }
     }
 
-    // Let's get the address of the framebuffer.
     u8* fb_addr = (uint8_t*)fb_hdr_tag->framebuffer_addr;
 
-    // Let's try to paint a few pixels white in the top left, so we know
-    // that we booted correctly.
     for (usize i = 0; i < 128; i++) {
         fb_addr[i] = 0xff;
     }
-
-    Serial::init_serial_out(0x3F8);
-    Serial::serial_printf((char*)"Hallo i bims da max");
 
     // We're done, just hang...
     for (;;) {

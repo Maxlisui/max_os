@@ -12,6 +12,8 @@ COBJFILES := $(patsubst %.c,$(BUILD_OUT)/%.o,$(CFILES))
 CXXFILES    := $(shell find $(END_PATH) -type f -name '*.cpp')
 CXXOBJFILES := $(patsubst %.cpp,$(BUILD_OUT)/%.o,$(CXXFILES))
 
+ASMFILES  := $(shell find $(END_PATH) -type f -name '*.asm')
+ASMOBJFILES := $(patsubst %.asm,$(BUILD_OUT)/%.o,$(ASMFILES))
 
 LINK_PATH := ./kernel/linker.ld
 
@@ -100,6 +102,9 @@ run: $(KERNEL_HDD)
 	qemu-system-x86_64 -m 4G -s -device pvpanic -smp 6 -serial stdio -enable-kvm -d cpu_reset -d guest_errors -hda $(KERNEL_HDD) \
 		-nic user,model=e1000 -M q35 -cpu host 
 
+.PHONY:build
+build: $(KERNEL_ELF)
+
 .PHONY:super
 super:
 	@make app -j12
@@ -120,10 +125,15 @@ $(BUILD_OUT)/%.o: %.cpp
 %.h : %.h 
 	@echo "[KERNEL] (h) $<"
 
+$(BUILD_OUT)/%.o: %.asm
+	@$(DIRECTORY_GUARD)
+	@echo "[KERNEL] (asm) $<"
+	@nasm $< -o $@ -felf64 -F dwarf -g -w+all -Werror
+
 
 .PHONY:$(KERNEL_ELF)
-$(KERNEL_ELF): $(COBJFILES) $(CXXOBJFILES) $(LINK_PATH)
-	@ld $(LDHARDFLAGS) $(COBJFILES) $(CXXOBJFILES) -o $@
+$(KERNEL_ELF): $(COBJFILES) $(CXXOBJFILES) $(ASMOBJFILES) $(LINK_PATH)
+	@ld $(LDHARDFLAGS) $(COBJFILES) $(CXXOBJFILES) $(ASMOBJFILES) -o $@
 
 .PHONY:clean
 clean:
