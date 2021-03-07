@@ -1,9 +1,8 @@
-#include <stivale2.h>
+#include <cpu/gdt.h>
 #include <cpu/serial.h>
 #include <cpu/sse.h>
+#include <stivale2.h>
 #include <types.h>
-// #include <stddef.h>
-// #include <stdint.h>
 
 // We need to tell the stivale bootloader where we want our stack to be.
 // We are going to allocate our stack as an uninitialised array in .bss.
@@ -91,6 +90,8 @@ extern "C" [[noreturn]] void _start(struct stivale2_struct* stivale2_struct)
     Serial::serial_printf("has SSE   .... yes (probably)");
     Serial::serial_printf("has XSAVE .... %s", SSE::has_xsave() ? "yes" : "no");
     Serial::serial_printf("has AVX   .... %s", SSE::has_avx() ? "yes" : "no");
+
+    GDT::gdt_init();
 
     struct stivale2_struct_tag_framebuffer* fb_hdr_tag;
     fb_hdr_tag = (struct stivale2_struct_tag_framebuffer*)stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_FRAMEBUFFER_ID);

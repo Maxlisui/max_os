@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string.h>
 #include <types.h>
 
 namespace GDT {
