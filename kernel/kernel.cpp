@@ -57,7 +57,7 @@ __attribute__((section(".stivale2hdr"), used)) struct stivale2_header stivale_hd
 
 // We will now write a helper function which will allow us to scan for tags
 // that we want FROM the bootloader (structure tags).
-void* stivale2_get_tag(struct stivale2_struct* stivale2_struct, uint64_t id)
+void* stivale2_get_tag(struct stivale2_struct* stivale2_struct, u64 id)
 {
     struct stivale2_tag* current_tag = (struct stivale2_tag*)stivale2_struct->tags;
     for (;;) {
@@ -103,7 +103,6 @@ extern "C" [[noreturn]] void _start(struct stivale2_struct* stivale2_struct)
 
     struct stivale2_struct_tag_memmap* mmap_hdr_tag = (stivale2_struct_tag_memmap*)stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_MEMMAP_ID);
 
-    
     RTC::init_rtc();
 
     struct stivale2_struct_tag_framebuffer* fb_hdr_tag;
@@ -116,7 +115,7 @@ extern "C" [[noreturn]] void _start(struct stivale2_struct* stivale2_struct)
         }
     }
 
-    u8* fb_addr = (uint8_t*)fb_hdr_tag->framebuffer_addr;
+    u8* fb_addr = (u8*)fb_hdr_tag->framebuffer_addr;
 
     for (usize i = 0; i < 128; i++) {
         fb_addr[i] = 0xff;
