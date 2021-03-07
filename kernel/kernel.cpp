@@ -91,7 +91,7 @@ extern "C" [[noreturn]] void _start(struct stivale2_struct* stivale2_struct)
     Serial::serial_printf("has XSAVE .... %s", SSE::has_xsave() ? "yes" : "no");
     Serial::serial_printf("has AVX   .... %s", SSE::has_avx() ? "yes" : "no");
 
-    GDT::gdt_init();
+    GDT::init_gdt();
 
     struct stivale2_struct_tag_framebuffer* fb_hdr_tag;
     fb_hdr_tag = (struct stivale2_struct_tag_framebuffer*)stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_FRAMEBUFFER_ID);

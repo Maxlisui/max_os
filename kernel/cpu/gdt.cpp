@@ -29,7 +29,7 @@ void setup_gdt_descriptors(gdt_descriptor_array<GDT_DESCRIPTORS>* target, u64 ts
     gdt_descriptors[0].fill_gdt_register(&SMP::get_current_cpu()->cgdt);
 }
 
-void gdt_init()
+void init_gdt()
 {
     Serial::serial_printf("Initializing GDT");
 
