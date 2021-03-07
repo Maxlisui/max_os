@@ -133,7 +133,7 @@ struct gdt_descriptor_array {
     }
 };
 
-void tss_init(u64 i);
+void init_tss(u64 i);
 void tss_set_rsp0(u64 rsp0);
 
 void init_gdt();

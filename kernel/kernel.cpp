@@ -1,12 +1,17 @@
 #include <cpu/gdt.h>
+#include <cpu/idt.h>
+#include <cpu/pic.h>
+#include <cpu/rtc.h>
 #include <cpu/serial.h>
 #include <cpu/sse.h>
 #include <stivale2.h>
 #include <types.h>
 
+#define STACK_SIZE 4096
+
 // We need to tell the stivale bootloader where we want our stack to be.
 // We are going to allocate our stack as an uninitialised array in .bss.
-static u8 stack[4096];
+static u8 stack[STACK_SIZE];
 
 // stivale2 uses a linked list of tags for both communicating TO the
 // bootloader, or receiving info FROM it. More information about these tags
@@ -92,6 +97,14 @@ extern "C" [[noreturn]] void _start(struct stivale2_struct* stivale2_struct)
     Serial::serial_printf("has AVX   .... %s", SSE::has_avx() ? "yes" : "no");
 
     GDT::init_gdt();
+    IDT::init_idt();
+    PIC::init_pic();
+    GDT::init_tss((u64)stack + sizeof(char) * STACK_SIZE);
+
+    struct stivale2_struct_tag_memmap* mmap_hdr_tag = (stivale2_struct_tag_memmap*)stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_MEMMAP_ID);
+
+    
+    RTC::init_rtc();
 
     struct stivale2_struct_tag_framebuffer* fb_hdr_tag;
     fb_hdr_tag = (struct stivale2_struct_tag_framebuffer*)stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_FRAMEBUFFER_ID);

@@ -13,3 +13,4 @@ typedef unsigned int u32;
 typedef unsigned long int u64;
 
 typedef long unsigned int usize;
+typedef i64 time_t;

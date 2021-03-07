@@ -12,7 +12,7 @@ static inline void write_to_port_u8(u16 port, u8 value)
     asm volatile("out dx, al" ::"a"(value), "d"(port));
 }
 
-static inline void write_to_por_u16t(u16 port, u16 value)
+static inline void write_to_por_u16(u16 port, u16 value)
 {
     asm volatile("out dx, ax" ::"a"(value), "d"(port));
 }

@@ -1,6 +1,7 @@
 #include <cpu/gdt.h>
 #include <cpu/serial.h>
 #include <cpu/smp.h>
+#include <string.h>
 
 #define GDT_DESCRIPTORS 7
 
@@ -43,6 +44,26 @@ void init_gdt()
     gdtr_install(&SMP::get_current_cpu()->cgdt, gdt_selector::KERNEL_CODE, gdt_selector::KERNEL_DATA);
 
     Serial::serial_printf("GDT Initialized");
+}
+
+void init_tss(u64 i)
+{
+    Serial::serial_printf("Initializing TSS");
+
+    SMP::cpu* current = SMP::get_current_cpu();
+
+    memzero(&current->ctss, sizeof(tss));
+
+    current->ctss.iomap_base = sizeof(tss);
+    current->ctss.rsp0 = i;
+    current->ctss.ist1 = i;
+
+    asm volatile("mov ax, %0 \n ltr ax"
+                 :
+                 : "i"(gdt_selector::TSS_SELECTOR)
+                 : "rax");
+
+    Serial::serial_printf("TSS Initialized");
 }
 
 }
