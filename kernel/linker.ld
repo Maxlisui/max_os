@@ -30,4 +30,6 @@ SECTIONS
     KEEP(*(COMMON))
     KEEP(*(.bss*))
   }
+
+  kernel_end_address = .;
 }

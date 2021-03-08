@@ -4,6 +4,7 @@
 #include <cpu/rtc.h>
 #include <cpu/serial.h>
 #include <cpu/sse.h>
+#include <memory/pmm.h>
 #include <stivale2.h>
 #include <types.h>
 
@@ -79,7 +80,7 @@ void* stivale2_get_tag(struct stivale2_struct* stivale2_struct, u64 id)
 }
 
 // The following will be our kernel's entry point.
-extern "C" [[noreturn]] void _start(struct stivale2_struct* stivale2_struct)
+extern "C" void _start(struct stivale2_struct* stivale2_struct)
 {
     asm volatile("and rsp, -16");
     asm volatile("cli");
@@ -98,11 +99,16 @@ extern "C" [[noreturn]] void _start(struct stivale2_struct* stivale2_struct)
 
     GDT::init_gdt();
     IDT::init_idt();
-    PIC::init_pic();
     GDT::init_tss((u64)stack + sizeof(char) * STACK_SIZE);
 
-    struct stivale2_struct_tag_memmap* mmap_hdr_tag = (stivale2_struct_tag_memmap*)stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_MEMMAP_ID);
+    stivale2_struct_tag_memmap* mmap_hdr_tag = (stivale2_struct_tag_memmap*)stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_MEMMAP_ID);
 
+    if (!PMM::init_pmm(mmap_hdr_tag)) {
+        Serial::serial_printf("Error while initializing PMM - Shutdown");
+        return;
+    }
+
+    PIC::init_pic();
     RTC::init_rtc();
 
     struct stivale2_struct_tag_framebuffer* fb_hdr_tag;
