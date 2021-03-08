@@ -1,9 +1,12 @@
 #include <cpu/serial.h>
 #include <memory/pmm.h>
+#include <mutex.h>
 #include <string.h>
 #include <types.h>
 
 namespace PMM {
+
+static mutex pmm_lock;
 
 struct physical_memory {
     usize size;
@@ -47,6 +50,64 @@ bool set_free(physical_memory* memory, usize idx, usize length)
         }
     }
     return true;
+}
+
+bool get(physical_memory* memory, usize idx)
+{
+    if (idx > memory->size) {
+        Serial::serial_printf("Trying to set Physical Memory Index %x > %x", idx, memory->size);
+        return false;
+    }
+
+    usize bit = idx % 8;
+    usize byte = idx / 8;
+    return (memory->buffer[byte] & (1 << (bit)));
+}
+
+usize find_free(physical_memory* memory, usize length)
+{
+    usize current_founded_length = 0;
+    usize current_founded_idx = 0;
+
+    for (usize i = memory->last_free; i < memory->size; i++) {
+        if (i == 0) {
+            continue;
+        }
+
+        if (!get(memory, i)) {
+            if (current_founded_length == 0) {
+                current_founded_idx = i;
+            }
+            current_founded_length++;
+        } else {
+            current_founded_length = 0;
+            current_founded_idx = 0;
+        }
+        if (current_founded_length == length) {
+            memory->last_free = current_founded_idx + current_founded_length;
+            return current_founded_idx;
+        }
+    }
+
+    if (memory->last_free == 0) {
+        Serial::serial_printf("No Free Physical memory found!");
+        return 0;
+    } else {
+        memory->last_free = 0;
+        return find_free(memory, length);
+    }
+}
+}
+
+void* alloc(usize length)
+{
+    pmm_lock.lock();
+
+    usize v = find_free(&memory, length);
+}
+
+void* alloc_zero(uisze length)
+{
 }
 
 bool init_pmm(stivale2_struct_tag_memmap* mmap_tag)
