@@ -97,17 +97,19 @@ usize find_free(physical_memory* memory, usize length)
         return find_free(memory, length);
     }
 }
-}
 
 void* alloc(usize length)
 {
     pmm_lock.lock();
 
-    usize v = find_free(&memory, length);
+    // usize v = find_free(&memory, length);
+
+    return NULL;
 }
 
-void* alloc_zero(uisze length)
+void* alloc_zero(usize length)
 {
+    return NULL;
 }
 
 bool init_pmm(stivale2_struct_tag_memmap* mmap_tag)

@@ -17,6 +17,7 @@ ASMOBJFILES := $(patsubst %.asm,$(BUILD_OUT)/%.o,$(ASMFILES))
 
 LINK_PATH := ./kernel/linker.ld
 
+HOST_OS_RELEASE = $(shell cat /proc/sys/kernel/osrelease)
 
 CC         = ./toolchain/bin/x86_64-elf-gcc
 CXX        = ./toolchain/bin/x86_64-elf-c++
@@ -102,8 +103,12 @@ all: build
 
 .PHONY:run
 run: $(KERNEL_HDD)
+ifeq ($(findstring microsoft, $(HOST_OS_RELEASE)),microsoft)
+	qemu-system-x86_64.exe -m 4G -s -device pvpanic -smp 6 -serial stdio -d guest_errors -hda $(KERNEL_HDD)
+else
 	qemu-system-x86_64 -m 4G -s -device pvpanic -smp 6 -serial stdio -enable-kvm -d cpu_reset -d guest_errors -hda $(KERNEL_HDD) \
 		-nic user,model=e1000 -M q35 -cpu host 
+endif
 
 .PHONY:build
 build: $(KERNEL_ELF)
