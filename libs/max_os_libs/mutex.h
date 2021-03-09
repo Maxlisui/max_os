@@ -2,24 +2,24 @@
 
 struct mutex {
 
-    bool is_locked;
+    bool locked;
 
 public:
     mutex()
-        : is_locked(false)
+        : locked(false)
     {
     }
 
     bool is_locked() const
     {
         bool res = false;
-        __atomic_load(&is_locked, &res, __ATOMIC_SEQ_CST);
+        __atomic_load(&locked, &res, __ATOMIC_SEQ_CST);
         return res;
     }
 
     void lock()
     {
-        while (!__sync_bool_compare_and_swap(&is_locked, false, true)) {
+        while (!__sync_bool_compare_and_swap(&locked, false, true)) {
             asm volatile("pause");
         }
 
@@ -30,7 +30,7 @@ public:
     {
         __sync_synchronize();
 
-        __atomic_store_n(&is_locked, false, __ATOMIC_SEQ_CST);
-        is_locked = false;
+        __atomic_store_n(&locked, false, __ATOMIC_SEQ_CST);
+        locked = false;
     }
 };
