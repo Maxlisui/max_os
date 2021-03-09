@@ -1,3 +1,5 @@
+UNAME := $(shell uname)
+
 DIRECTORY_GUARD=mkdir -p $(@D)
 
 END_PATH := ./kernel ./libs/libc ./libs/max_os_libs
@@ -17,10 +19,16 @@ ASMOBJFILES := $(patsubst %.asm,$(BUILD_OUT)/%.o,$(ASMFILES))
 
 LINK_PATH := ./kernel/linker.ld
 
-
+ifeq ($(UNAME), Linux)
 CC         = ./toolchain/bin/x86_64-elf-gcc
 CXX        = ./toolchain/bin/x86_64-elf-c++
 LD         = ./toolchain/bin/x86_64-elf-ld
+endif
+ifeq ($(UNAME), Darwin)
+CC         = x86_64-elf-gcc
+CXX        = x86_64-elf-c++
+LD         = x86_64-elf-ld
+endif
 
 OBJ := $(shell find $(BUILD_OUT) -type f -name '*.o')
 
@@ -89,7 +97,7 @@ LDHARDFLAGS := $(LDFLAGS)        \
 .PHONY:$(KERNEL_HDD)
 $(KERNEL_HDD): $(KERNEL_ELF)
 	rm -f $(KERNEL_HDD)
-	dd if=/dev/zero bs=1M count=0 seek=64 of=$(KERNEL_HDD)
+	dd if=/dev/zero bs=1024 count=0 seek=64 of=$(KERNEL_HDD)
 	parted -s $(KERNEL_HDD) mklabel gpt
 	parted -s $(KERNEL_HDD) mkpart primary 2048s 100%
 	echfs-utils -g -p0 $(KERNEL_HDD) quick-format 512
@@ -136,7 +144,7 @@ $(BUILD_OUT)/%.o: %.asm
 
 .PHONY:$(KERNEL_ELF)
 $(KERNEL_ELF): $(COBJFILES) $(CXXOBJFILES) $(ASMOBJFILES) $(LINK_PATH)
-	@ld $(LDHARDFLAGS) $(COBJFILES) $(CXXOBJFILES) $(ASMOBJFILES) -o $@
+	@$(LD) $(LDHARDFLAGS) $(COBJFILES) $(CXXOBJFILES) $(ASMOBJFILES) -o $@
 
 .PHONY:clean
 clean:
