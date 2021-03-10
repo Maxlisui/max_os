@@ -22,14 +22,16 @@ LINK_PATH := ./kernel/linker.ld
 HOST_OS_RELEASE = $(shell cat /proc/sys/kernel/osrelease)
 
 ifeq ($(UNAME), Linux)
-CC         = ./toolchain/bin/x86_64-elf-gcc
-CXX        = ./toolchain/bin/x86_64-elf-c++
-LD         = ./toolchain/bin/x86_64-elf-ld
+CC              = ./toolchain/bin/x86_64-elf-gcc
+CXX             = ./toolchain/bin/x86_64-elf-c++
+LD              = ./toolchain/bin/x86_64-elf-ld
+HOST_OS_RELEASE = $(shell cat /proc/sys/kernel/osrelease)
 endif
 ifeq ($(UNAME), Darwin)
-CC         = x86_64-elf-gcc
-CXX        = x86_64-elf-c++
-LD         = x86_64-elf-ld
+CC              = x86_64-elf-gcc
+CXX             = x86_64-elf-c++
+LD              = x86_64-elf-ld
+HOST_OS_RELEASE = Darwin
 endif
 
 OBJ := $(shell find $(BUILD_OUT) -type f -name '*.o')
