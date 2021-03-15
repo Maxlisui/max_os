@@ -15,6 +15,8 @@ struct physical_memory {
 };
 
 static physical_memory memory;
+static u64 used_memory = 0;
+static u64 available_memory = 0;
 
 void init_physical_memory(physical_memory* memory, u64 base_address, u64 length)
 {
@@ -43,6 +45,17 @@ bool set(physical_memory* memory, usize idx, bool used)
 }
 
 bool set_free(physical_memory* memory, usize idx, usize length)
+{
+    for (usize i = 0; i < length; i++) {
+        if (!set(memory, idx + i, false)) {
+            return false;
+        }
+    }
+    memory->last_free = idx;
+    return true;
+}
+
+bool set_used(physical_memory* memory, usize idx, usize length)
 {
     for (usize i = 0; i < length; i++) {
         if (!set(memory, idx + i, true)) {
@@ -101,15 +114,47 @@ usize find_free(physical_memory* memory, usize length)
 void* alloc(usize length)
 {
     pmm_lock.lock();
+    used_memory += length;
+    if (used_memory >= available_memory) {
+        Serial::serial_printf("Too much physical memory used %d/%d", used_memory, available_memory);
+        return NULL;
+    }
 
-    // usize v = find_free(&memory, length);
+    usize v = find_free(&memory, length);
 
-    return NULL;
+    if (v == 0) {
+        Serial::serial_printf("Can't allocate block count %d", length);
+        pmm_lock.unlock();
+        return NULL;
+    }
+    if (!set_used(&memory, v, length)) {
+        Serial::serial_printf("Can't set used block count %d", length);
+        pmm_lock.unlock();
+        return NULL;
+    }
+
+    pmm_lock.unlock();
+
+    return (void*)(v * PAGE_SIZE);
 }
 
-void* alloc_zero(usize length)
+void* allocate_zero(usize length)
 {
-    return NULL;
+    void* data = alloc(length);
+
+    if (!data) {
+        return NULL;
+    }
+
+    pmm_lock.lock();
+
+    u64* pages = get_mem_addr<u64*>(data);
+
+    for (u64 i = 0; i < (length * PAGE_SIZE) / sizeof(u64); i++) {
+        pages[i] = 0;
+    }
+    pmm_lock.unlock();
+    return data;
 }
 
 bool init_pmm(stivale2_struct_tag_memmap* mmap_tag)
@@ -136,7 +181,9 @@ bool init_pmm(stivale2_struct_tag_memmap* mmap_tag)
         stivale2_mmap_entry it = mmap_tag->memmap[i];
 
         if (it.type == 1) {
-            if (!set_free(&memory, it.base / PAGE_SIZE, it.length / PAGE_SIZE)) {
+            if (set_free(&memory, it.base / PAGE_SIZE, it.length / PAGE_SIZE)) {
+                available_memory = it.length / PAGE_SIZE;
+            } else {
                 return false;
             }
         }

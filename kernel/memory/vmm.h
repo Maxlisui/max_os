@@ -4,6 +4,6 @@
 
 namespace VMM {
 
-void init_vmm(stivale2_struct_tag_memmap* mmap_tag);
+bool init_vmm(stivale2_struct_tag_memmap* mmap_tag);
 
 }

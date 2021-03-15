@@ -5,6 +5,7 @@
 #include <cpu/serial.h>
 #include <cpu/sse.h>
 #include <memory/pmm.h>
+#include <memory/vmm.h>
 #include <stivale2.h>
 #include <types.h>
 
@@ -82,6 +83,8 @@ void* stivale2_get_tag(struct stivale2_struct* stivale2_struct, u64 id)
 // The following will be our kernel's entry point.
 extern "C" void _start(struct stivale2_struct* stivale2_struct)
 {
+    stivale2_struct_tag_memmap* mmap_hdr_tag = (stivale2_struct_tag_memmap*)stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_MEMMAP_ID);
+
     asm volatile("and rsp, -16");
     asm volatile("cli");
     // fs is used for getting cpu n°
@@ -99,12 +102,16 @@ extern "C" void _start(struct stivale2_struct* stivale2_struct)
 
     GDT::init_gdt();
     IDT::init_idt();
-    GDT::init_tss((u64)stack + sizeof(char) * STACK_SIZE);
 
-    stivale2_struct_tag_memmap* mmap_hdr_tag = (stivale2_struct_tag_memmap*)stivale2_get_tag(stivale2_struct, STIVALE2_STRUCT_TAG_MEMMAP_ID);
+    GDT::init_tss((u64)stack + sizeof(char) * STACK_SIZE);
 
     if (!PMM::init_pmm(mmap_hdr_tag)) {
         Serial::serial_printf("Error while initializing PMM - Shutdown");
+        return;
+    }
+
+    if (!VMM::init_vmm(mmap_hdr_tag)) {
+        Serial::serial_printf("Error while initializing VMM - Shutdown");
         return;
     }
 
