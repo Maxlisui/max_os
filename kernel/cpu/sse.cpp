@@ -3,7 +3,7 @@
 
 extern "C" void sse_init(void);
 extern "C" void enable_xsave(void);
-extern "C" void avx_init(void);
+extern "C" void enable_avx(void);
 extern "C" void asm_sse_save(u64 addr);
 extern "C" void asm_sse_load(u64 addr);
 extern "C" void asm_avx_save(u64 addr);
@@ -47,7 +47,7 @@ void init_xsave()
 void init_avx()
 {
     if (has_avx()) {
-        avx_init();
+        enable_avx();
     }
 }
 
@@ -61,7 +61,7 @@ void init_sse()
     init_xsave();
 
     Serial::serial_printf(" -Initializing AVX");
-    init_xsave();
+    init_avx();
 
     Serial::serial_printf(" -Initializing Floating Point Unit");
     asm("fninit");

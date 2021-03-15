@@ -29,8 +29,8 @@ enable_xsave:
     pop rax
     ret
 
-global avx_init
-avx_init:
+global enable_avx
+enable_avx:
     push rax
     push rcx
     push rdx
